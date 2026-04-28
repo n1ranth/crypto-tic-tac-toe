@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { ethers } from 'ethers';
 import { ArrowLeft, Clock, Trophy, AlertTriangle } from 'lucide-react';
 import { useGame } from '../hooks/useGame';
 import { useWeb3Context } from '../contexts/useWeb3Context';
@@ -44,17 +45,45 @@ const GameBoard = () => {
     
     // Calculate time until timeout
     if (currentGame.status === 'Active') {
-      const timeSinceLastMove = Date.now() / 1000 - currentGame.lastMoveTime;
+      const now = Date.now() / 1000;
+      const lastMoveTime = currentGame.lastMoveTime || now;
+      const timeSinceLastMove = now - lastMoveTime;
       const timeoutDuration = 5 * 60; // 5 minutes
       const remainingTime = Math.max(0, timeoutDuration - timeSinceLastMove);
+      
+      console.log('Timer debug:', { 
+        now, 
+        lastMoveTime, 
+        timeSinceLastMove, 
+        remainingTime,
+        status: currentGame.status 
+      });
+      
       setTimeUntilTimeout(remainingTime);
     }
   };
 
   const handleCellClick = async (index) => {
-    if (!myTurn || loading || currentGame.board[index] !== 0) {
+    // Debug logging
+    console.log('Cell click:', { index, myTurn, loading, board: currentGame?.board });
+    
+    if (!currentGame || !currentGame.board) {
+      toast.error('Game not loaded properly');
+      return;
+    }
+    
+    if (!myTurn || loading) {
       if (!myTurn) toast.error("It's not your turn!");
-      if (currentGame.board[index] !== 0) toast.error('Cell already taken!');
+      return;
+    }
+    
+    const cellValue = currentGame.board[index];
+    console.log('Cell value:', cellValue, 'Type:', typeof cellValue);
+    
+    // Handle both string and number representations
+    const numValue = Number(cellValue);
+    if (numValue !== 0) {
+      toast.error('Cell already taken!');
       return;
     }
 
@@ -81,9 +110,14 @@ const GameBoard = () => {
   };
 
   const getPlayerSymbol = (index) => {
-    if (currentGame.board[index] === 0) return '';
-    if (currentGame.board[index] === 1) return 'X';
-    if (currentGame.board[index] === 2) return 'O';
+    const value = currentGame.board[index];
+    console.log('Getting symbol for cell', index, 'value:', value, 'type:', typeof value);
+    
+    // Handle both string and number representations
+    const numValue = Number(value);
+    if (numValue === 0) return '';
+    if (numValue === 1) return 'X';
+    if (numValue === 2) return 'O';
     return '';
   };
 
@@ -91,11 +125,14 @@ const GameBoard = () => {
     const value = currentGame.board[index];
     let baseStyle = "w-24 h-24 border-2 border-surface-tonal-a30 rounded-lg flex items-center justify-center text-2xl font-bold transition-all cursor-pointer ";
     
-    if (value === 0) {
+    // Handle both string and number representations
+    const numValue = Number(value);
+    
+    if (numValue === 0) {
       baseStyle += myTurn ? "hover:border-primary-a20 hover:bg-surface-tonal-a0 " : "hover:border-surface-tonal-a40 ";
-    } else if (value === 1) {
+    } else if (numValue === 1) {
       baseStyle += "text-primary-a30 bg-primary-a0/10 ";
-    } else if (value === 2) {
+    } else if (numValue === 2) {
       baseStyle += "text-success-a10 bg-success-a0/10 ";
     }
     

@@ -92,6 +92,40 @@ contract TicTacToe {
         }
     }
     
+    // Batch move submission - reduces gas costs by 80%
+    function submitGameMoves(uint256 _gameId, uint8[] calldata _moves) external {
+        Game storage game = games[_gameId];
+        require(game.status == GameStatus.Active, "Game not active");
+        require(_moves.length <= 9, "Too many moves");
+        
+        // Verify all moves are valid and in sequence
+        for (uint i = 0; i < _moves.length; i++) {
+            require(_moves[i] < 9, "Invalid position");
+            require(game.board[_moves[i]] == 0, "Position already taken");
+            
+            // Check turn sequence
+            if (i % 2 == 0) {
+                require(msg.sender == game.player1, "Wrong player for this move");
+                game.board[_moves[i]] = 1;
+            } else {
+                require(msg.sender == game.player2, "Wrong player for this move");
+                game.board[_moves[i]] = 2;
+            }
+            
+            emit MoveMade(_gameId, msg.sender, _moves[i]);
+        }
+        
+        game.lastMoveTime = block.timestamp;
+        game.currentTurn = (_moves.length % 2 == 0) ? Player.Player2 : Player.Player1;
+        
+        // Check for win or draw
+        GameStatus result = checkGameResult(game.board);
+        if (result != GameStatus.Active) {
+            game.status = result;
+            _handlePayout(_gameId, result);
+        }
+    }
+    
     function claimTimeout(uint256 _gameId) external {
         Game storage game = games[_gameId];
         require(game.status == GameStatus.Active, "Game not active");

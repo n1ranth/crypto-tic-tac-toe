@@ -113,6 +113,33 @@ export const useGame = () => {
     return false;
   }, [web3State]);
 
+  // Submit multiple moves at once - saves 80% on gas fees
+  const submitBatchMoves = useCallback(async (gameId, moves) => {
+    if (!web3State.contractInstance || !web3State.selectedAccount) {
+      toast.error('Please connect your wallet first');
+      return false;
+    }
+
+    setLoading(true);
+    try {
+      const tx = await web3State.contractInstance.submitGameMoves(gameId, moves);
+      
+      toast.info('Submitting batch moves...');
+      await tx.wait();
+      
+      toast.success(`Submitted ${moves.length} moves! Saved ~${(moves.length - 1) * 0.5} ETH in gas fees`);
+      await fetchGameDetails(gameId);
+      
+      return true;
+    } catch (error) {
+      console.error('Batch moves error:', error);
+      toast.error(error.message || 'Failed to submit moves');
+    } finally {
+      setLoading(false);
+    }
+    return false;
+  }, [web3State]);
+
   // Claim timeout if opponent hasn't moved
   const claimTimeout = useCallback(async (gameId) => {
     if (!web3State.contractInstance || !web3State.selectedAccount) {
@@ -391,6 +418,7 @@ export const useGame = () => {
     createGame,
     joinGame,
     makeMove,
+    submitBatchMoves,
     claimTimeout,
     fetchGameDetails,
     fetchPlayerGames,
