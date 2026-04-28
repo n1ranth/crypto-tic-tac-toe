@@ -16,7 +16,6 @@ A decentralized Tic-Tac-Toe game where players stake Sepolia ETH to compete. Bui
 | Layer | Technology |
 |---|---|
 | **Frontend** | Vite + React 19 + Tailwind CSS v4, Ethers.js v6, React Router, React Toastify |
-| **Backend** | Express.js + MongoDB + JWT auth + Ethers.js event listeners |
 | **Smart Contract** | Solidity ^0.8.20, deployed to Sepolia testnet |
 | **Wallet** | MetaMask browser extension |
 | **Network** | Ethereum Sepolia Testnet |
@@ -63,36 +62,12 @@ VITE_CONTRACT_ADDRESS=your_deployed_contract_address_here
 ### Run the Application
 
 ```bash
-# Terminal 1 — Backend
-cd server
-npm start              # runs on http://localhost:3000
-
-# Terminal 2 — Frontend  
+# Start the frontend
 cd client
-npm run dev            # runs on http://localhost:5173
+npm run dev
+
+# Visit http://localhost:5173
 ```
-
-### Backend Setup
-
-1. **Set up MongoDB**:
-   - Create a free MongoDB Atlas cluster
-   - Get your connection string
-
-2. **Configure Backend**:
-   ```bash
-   cd server
-   cp .env.example .env
-   # Edit .env with your values:
-   # MONGODB_URL=your_mongodb_connection_string
-   # JWT_SECRETKEY=your_secret_key
-   # CONTRACT_ADDRESS=your_deployed_contract_address
-   # RPC_URL=https://sepolia.infura.io/v3/your_infura_project_id
-   ```
-
-3. **Start Backend Server**:
-   ```bash
-   npm start
-   ```
 
 ## 🎯 How to Play
 
@@ -147,18 +122,7 @@ npm run dev            # runs on http://localhost:5173
 | `getGame(gameId)` | Get complete game state |
 | `getAvailableGames()` | List all games waiting for players |
 
-## � Backend API Endpoints
-
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/api/authentication` | POST | JWT authentication for wallet |
-| `/api/game/stats/:address` | GET | Player statistics and win rate |
-| `/api/game/games/:address` | GET | Player game history (paginated) |
-| `/api/game/leaderboard` | GET | Global player leaderboard |
-| `/api/sync-games` | POST | Manual sync of contract events |
-| `/health` | GET | Server health check |
-
-## �� UI Components
+## 🎨 UI Components
 
 - **Game Lobby**: Browse and join available games
 - **Game Board**: Interactive 3x3 Tic-Tac-Toe grid

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { ethers } from 'ethers';
 import {
   Trophy,
   Loader2,

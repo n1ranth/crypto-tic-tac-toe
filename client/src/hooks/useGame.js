@@ -173,27 +173,81 @@ export const useGame = () => {
     if (!web3State.contractInstance || !web3State.selectedAccount) return;
 
     try {
-      const playerGameIds = await web3State.contractInstance.getPlayerGames(web3State.selectedAccount);
+      // Try getPlayerGames function first
+      let playerGameIds = [];
+      try {
+        playerGameIds = await web3State.contractInstance.getPlayerGames(web3State.selectedAccount);
+      } catch (getPlayerError) {
+        console.warn('getPlayerGames function failed, using fallback method:', getPlayerError.message);
+        
+        // Fallback: Get all games and filter by player
+        try {
+          const gameCounter = await web3State.contractInstance.gameCounter();
+          const allGameIds = Array.from({ length: Number(gameCounter) }, (_, i) => i + 1);
+          
+          const allGames = await Promise.all(
+            allGameIds.map(async (gameId) => {
+              try {
+                const game = await web3State.contractInstance.getGame(gameId);
+                return {
+                  id: gameId.toString(),
+                  player1: game.player1,
+                  player2: game.player2,
+                  wager: ethers.formatEther(game.wager),
+                  lastMoveTime: Number(game.lastMoveTime),
+                  status: getGameStatusText(game.status),
+                  board: game.board,
+                  currentTurn: game.currentTurn
+                };
+              } catch {
+                return null;
+              }
+            })
+          );
+          
+          // Filter games where player is involved
+          const playerGames = allGames.filter(game => 
+            game && (
+              game.player1.toLowerCase() === web3State.selectedAccount.toLowerCase() ||
+              (game.player2 && game.player2.toLowerCase() === web3State.selectedAccount.toLowerCase())
+            )
+          );
+          
+          setGames(playerGames);
+          return;
+        } catch (fallbackError) {
+          console.error('Fallback method also failed:', fallbackError.message);
+          setGames([]);
+          return;
+        }
+      }
+      
       const gamesDetails = await Promise.all(
         playerGameIds.map(async (gameId) => {
-          const game = await web3State.contractInstance.getGame(gameId);
-          return {
-            id: gameId.toString(),
-            player1: game.player1,
-            player2: game.player2,
-            wager: ethers.formatEther(game.wager),
-            lastMoveTime: Number(game.lastMoveTime),
-            status: getGameStatusText(game.status),
-            board: game.board,
-            currentTurn: game.currentTurn
-          };
+          try {
+            const game = await web3State.contractInstance.getGame(gameId);
+            return {
+              id: gameId.toString(),
+              player1: game.player1,
+              player2: game.player2,
+              wager: ethers.formatEther(game.wager),
+              lastMoveTime: Number(game.lastMoveTime),
+              status: getGameStatusText(game.status),
+              board: game.board,
+              currentTurn: game.currentTurn
+            };
+          } catch (gameError) {
+            console.warn(`Failed to fetch game ${gameId}:`, gameError.message);
+            return null;
+          }
         })
       );
-      setGames(gamesDetails);
+      setGames(gamesDetails.filter(game => game !== null));
     } catch (error) {
       console.error('Fetch player games error:', error);
+      setGames([]);
     }
-  }, [web3State]);
+  }, [web3State.contractInstance, web3State.selectedAccount]);
 
   // Fetch specific game details
   const fetchGameDetails = useCallback(async (gameId) => {
@@ -237,46 +291,67 @@ export const useGame = () => {
 
     const contract = web3State.contractInstance;
 
-    // Listen for new games
-    contract.on('GameCreated', (gameId, player1, wager) => {
-      toast.info(`New game ${gameId.toString()} created by ${player1.slice(0, 6)}...`);
-      fetchAvailableGames();
-    });
+    try {
+      // Listen for new games
+      contract.on('GameCreated', (gameId, player1, wager) => {
+        toast.info(`New game ${gameId.toString()} created by ${player1.slice(0, 6)}...`);
+        fetchAvailableGames();
+      });
 
-    // Listen for game joins
-    contract.on('GameJoined', (gameId, player2) => {
-      toast.info(`Game ${gameId.toString()} joined by ${player2.slice(0, 6)}...`);
-      fetchAvailableGames();
-      fetchPlayerGames();
-    });
+      // Listen for game joins
+      contract.on('GameJoined', (gameId, player2) => {
+        toast.info(`Game ${gameId.toString()} joined by ${player2.slice(0, 6)}...`);
+        fetchAvailableGames();
+        fetchPlayerGames();
+      });
 
-    // Listen for moves
-    contract.on('MoveMade', (gameId, player, position) => {
-      toast.info(`Move made at position ${position} by ${player.slice(0, 6)}...`);
-      fetchGameDetails(gameId.toString());
-    });
+      // Listen for moves
+      contract.on('MoveMade', (gameId, player, position) => {
+        toast.info(`Move made at position ${position} by ${player.slice(0, 6)}...`);
+        fetchGameDetails(gameId.toString());
+      });
 
-    // Listen for game over
-    contract.on('GameOver', (gameId, status, winner) => {
-      const statusText = getGameStatusText(status);
-      if (winner && winner !== ethers.ZeroAddress) {
-        toast.success(`Game ${gameId.toString()} over! Winner: ${winner.slice(0, 6)}...`);
-      } else {
-        toast.info(`Game ${gameId.toString()} over! Status: ${statusText}`);
-      }
-      fetchPlayerGames();
-      fetchGameDetails(gameId.toString());
-    });
+      // Listen for game over
+      contract.on('GameOver', (gameId, status, winner) => {
+        const statusText = getGameStatusText(status);
+        if (winner && winner !== ethers.ZeroAddress) {
+          toast.success(`Game ${gameId.toString()} over! Winner: ${winner.slice(0, 6)}...`);
+        } else {
+          toast.info(`Game ${gameId.toString()} over! Status: ${statusText}`);
+        }
+        fetchPlayerGames();
+        fetchGameDetails(gameId.toString());
+      });
 
-    // Listen for timeout claims
-    contract.on('TimeoutClaimed', (gameId, claimer) => {
-      toast.success(`Timeout claimed in game ${gameId.toString()} by ${claimer.slice(0, 6)}...`);
-      fetchPlayerGames();
-      fetchGameDetails(gameId.toString());
-    });
+      // Listen for timeout claims
+      contract.on('TimeoutClaimed', (gameId, claimer) => {
+        toast.success(`Timeout claimed in game ${gameId.toString()} by ${claimer.slice(0, 6)}...`);
+        fetchPlayerGames();
+        fetchGameDetails(gameId.toString());
+      });
+
+      console.log('✅ Event listeners set up successfully');
+    } catch (error) {
+      console.warn('⚠️ Failed to set up event listeners:', error.message);
+      console.log('🔄 Using polling fallback instead');
+      
+      // Fallback to polling every 10 seconds
+      const pollInterval = setInterval(() => {
+        fetchAvailableGames();
+        fetchPlayerGames();
+      }, 10000);
+      
+      return () => clearInterval(pollInterval);
+    }
 
     return () => {
-      contract.removeAllListeners();
+      try {
+        if (contract && typeof contract.removeAllListeners === 'function') {
+          contract.removeAllListeners();
+        }
+      } catch (error) {
+        console.warn('Error cleaning up listeners:', error.message);
+      }
     };
   }, [web3State.contractInstance, fetchAvailableGames, fetchPlayerGames, fetchGameDetails]);
 
@@ -292,15 +367,21 @@ export const useGame = () => {
     return statusMap[Number(status)] || 'Unknown';
   };
 
-  // Initialize event listeners and fetch data
+  // Initialize and fetch data (polling only)
   useEffect(() => {
     if (web3State.contractInstance) {
       fetchAvailableGames();
       fetchPlayerGames();
-      const cleanup = setupEventListeners();
-      return cleanup;
+      
+      // Simple polling every 15 seconds instead of event listeners
+      const pollInterval = setInterval(() => {
+        fetchAvailableGames();
+        fetchPlayerGames();
+      }, 15000);
+      
+      return () => clearInterval(pollInterval);
     }
-  }, [web3State.contractInstance, fetchAvailableGames, fetchPlayerGames, setupEventListeners]);
+  }, [web3State.contractInstance, fetchAvailableGames, fetchPlayerGames]);
 
   return {
     games,

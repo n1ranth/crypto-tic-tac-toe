@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { Plus, Clock, Users, Trophy, ExternalLink } from 'lucide-react';
+import { ethers } from 'ethers';
 import { useGame } from '../hooks/useGame';
 import { useWeb3Context } from '../contexts/useWeb3Context';
 
