@@ -292,41 +292,41 @@ const GameBoard = () => {
           {/* Game Info */}
           <div className="lg:col-span-1">
             <div className="minimal-card">
-              <h2 className="font-heading font-bold text-lg accent-text mb-4">
+              <h2 className="font-heading font-bold text-xl accent-text mb-4">
                 Game Info
               </h2>
               
               <div className="space-y-4">
                 <div className="minimal-card mb-3">
-                  <p className="text-xs text-gray-500 mb-1">Player 1 (X)</p>
-                  <p className="font-mono text-sm accent-text font-semibold">
+                  <p className="text-sm text-gray-500 mb-1">Player 1 (X)</p>
+                  <p className="font-mono text-base accent-text font-semibold">
                     {formatAddress(currentGame.player1)}
                     {currentGame.player1.toLowerCase() === selectedAccount?.toLowerCase() && (
-                      <span className="ml-2 text-xs bg-primary text-white px-2 py-1 rounded text-xs">You</span>
+                      <span className="ml-2 text-sm bg-primary text-white px-2 py-1 rounded">You</span>
                     )}
                   </p>
                 </div>
                 
                 {currentGame.player2 && currentGame.player2 !== ethers.ZeroAddress && (
                   <div className="minimal-card">
-                    <p className="text-xs text-gray-500 mb-1">Player 2 (O)</p>
-                    <p className="font-mono text-sm text-success font-semibold">
+                    <p className="text-sm text-gray-500 mb-1">Player 2 (O)</p>
+                    <p className="font-mono text-base text-success font-semibold">
                       {formatAddress(currentGame.player2)}
                       {currentGame.player2.toLowerCase() === selectedAccount?.toLowerCase() && (
-                        <span className="ml-2 text-xs bg-success text-white px-2 py-1 rounded text-xs">You</span>
+                        <span className="ml-2 text-sm bg-success text-white px-2 py-1 rounded">You</span>
                       )}
                     </p>
                   </div>
                 )}
                 
                 <div>
-                  <p className="text-xs text-surface-a50 mb-1">Status</p>
-                  <p className="text-sm font-semibold text-primary-a40">{currentGame.status}</p>
+                  <p className="text-sm text-surface-a50 mb-1">Status</p>
+                  <p className="text-base font-semibold text-primary-a40">{currentGame.status}</p>
                 </div>
                 
                 <div>
-                  <p className="text-xs text-surface-a50 mb-1">Prize Pool</p>
-                  <p className="text-sm font-semibold text-primary-a40">
+                  <p className="text-sm text-surface-a50 mb-1">Prize Pool</p>
+                  <p className="text-base font-semibold text-primary-a40">
                     {(parseFloat(currentGame.wager) * 2).toFixed(4)} ETH
                   </p>
                 </div>

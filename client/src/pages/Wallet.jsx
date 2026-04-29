@@ -48,7 +48,7 @@ const Wallet = () => {
 
         {/* Connect button */}
         <button
-          className="px-10 py-4 bg-primary-a0 hover:bg-primary-a10 text-white rounded-xl font-label font-semibold text-lg transition-all hover:shadow-[0_0_24px_rgba(119,85,170,0.3)]"
+          className="px-10 py-4 bg-primary-a0 hover:bg-primary-a10 text-white rounded-xl font-label font-semibold text-lg transition-all hover:shadow-[0_0_24px_rgba(119,85,170,0.3)] border-2 border-primary-a30 hover:border-primary-a20"
           onClick={handleWalletConnection}
         >
           Connect Wallet
