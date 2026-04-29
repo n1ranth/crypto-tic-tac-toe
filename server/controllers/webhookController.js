@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import Game from '../models/Game.js';
-import contractAbi from '../constants/ticTacToeAbi.json';
+import contractAbi from '../constants/ticTacToeAbi.json' with { type: 'json' };
 
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 const RPC_URL = process.env.RPC_URL || 'https://sepolia.infura.io/v3/your-project-id';

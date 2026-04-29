@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Plus, Clock, Users, Trophy, ExternalLink } from 'lucide-react';
 import { ethers } from 'ethers';
@@ -6,6 +7,7 @@ import { useGame } from '../hooks/useGame';
 import { useWeb3Context } from '../contexts/useWeb3Context';
 
 const GameLobby = () => {
+  const navigate = useNavigate();
   const { web3State } = useWeb3Context();
   const { selectedAccount } = web3State;
   const { 
@@ -17,7 +19,7 @@ const GameLobby = () => {
     fetchAvailableGames, 
     fetchPlayerGames,
     getGasCostInfo
-  } = useGame();
+  } = useGame(navigate);
   
   const [wagerAmount, setWagerAmount] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -52,7 +54,10 @@ const GameLobby = () => {
   };
 
   const handleJoinGame = async (gameId) => {
-    await joinGame(gameId);
+    const success = await joinGame(gameId);
+    if (success) {
+      navigate(`/game/${gameId}`);
+    }
   };
 
   const formatAddress = (address) => {

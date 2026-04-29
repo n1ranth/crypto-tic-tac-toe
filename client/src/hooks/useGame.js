@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { toast } from 'react-toastify';
 import { useWeb3Context } from '../contexts/useWeb3Context';
 
-export const useGame = () => {
+export const useGame = (navigate = null) => {
   const { web3State } = useWeb3Context();
   const [games, setGames] = useState([]);
   const [currentGame, setCurrentGame] = useState(null);
@@ -22,6 +22,14 @@ export const useGame = () => {
       const wagerWei = ethers.parseEther(wagerAmount.toString());
       const gasCostWei = ethers.parseEther('0.00162'); // Pre-paid gas cost
       const totalWei = wagerWei + gasCostWei;
+      
+      console.log('Create Game Debug:', {
+        wagerAmount,
+        wagerWei: wagerWei.toString(),
+        gasCostWei: gasCostWei.toString(),
+        totalWei: totalWei.toString(),
+        totalEth: ethers.formatEther(totalWei)
+      });
       
       const tx = await web3State.contractInstance.createGame({ value: totalWei });
       
@@ -42,7 +50,7 @@ export const useGame = () => {
         const parsedEvent = web3State.contractInstance.interface.parseLog(gameCreatedEvent);
         const gameId = parsedEvent.args.gameId;
         
-        toast.success(`Game ${gameId} created! Wager: ${wagerAmount} ETH + Gas: 0.00162 ETH`);
+        toast.success(`Game ${gameId} created! Wager: ${wagerAmount} ETH + Gas: ${ethers.formatEther(gasCostWei)} ETH`);
         await fetchAvailableGames();
         await fetchPlayerGames();
         
@@ -59,29 +67,57 @@ export const useGame = () => {
 
   // Join an existing game
   const joinGame = useCallback(async (gameId) => {
+    console.log('joinGame called with gameId:', gameId);
+    
     if (!web3State.contractInstance || !web3State.selectedAccount) {
       toast.error('Please connect your wallet first');
       return false;
     }
 
+    console.log('Contract and account validated');
     setLoading(true);
     try {
+      console.log('Fetching game details for gameId:', gameId);
       const game = await web3State.contractInstance.getGame(gameId);
-      const wagerWei = game.wager;
-      const gasCostWei = ethers.parseEther('0.00162'); // Pre-paid gas cost
-      const totalWei = wagerWei + gasCostWei;
+      console.log('Game fetched:', game);
       
-      const tx = await web3State.contractInstance.joinGame(gameId, { value: totalWei });
+      const wagerWei = ethers.getBigInt(game.wager);
       
-      toast.info('Joining game...');
-      const receipt = await tx.wait();
+      console.log('Joining game with exact wager amount:', ethers.formatEther(wagerWei), 'ETH');
       
-      toast.success(`Joined game ${gameId}! Wager + Gas: 0.00162 ETH`);
-      await fetchAvailableGames();
-      await fetchPlayerGames();
-      await fetchGameDetails(gameId);
-      
-      return true;
+      // Try joining with just the wager amount (what the user sees)
+      try {
+        const joinTx = await web3State.contractInstance.joinGame(gameId, { value: wagerWei });
+        
+        toast.info('Joining game...');
+        const receipt = await joinTx.wait();
+        
+        toast.success(`Joined game ${gameId}! Wager: ${ethers.formatEther(wagerWei)} ETH`);
+        await fetchAvailableGames();
+        await fetchPlayerGames();
+        await fetchGameDetails(gameId);
+        
+        return true;
+        
+      } catch (error) {
+        // If direct wager fails, the contract might expect wager + gas
+        console.log('Direct wager failed, trying with standard gas addition...');
+        
+        const gasCostWei = ethers.parseEther('0.00162');
+        const totalWei = wagerWei + gasCostWei;
+        
+        const joinTx = await web3State.contractInstance.joinGame(gameId, { value: totalWei });
+        
+        toast.info('Joining game...');
+        const receipt = await joinTx.wait();
+        
+        toast.success(`Joined game ${gameId}! Wager: ${ethers.formatEther(wagerWei)} ETH + Gas: ${ethers.formatEther(gasCostWei)} ETH`);
+        await fetchAvailableGames();
+        await fetchPlayerGames();
+        await fetchGameDetails(gameId);
+        
+        return true;
+      }
     } catch (error) {
       console.error('Join game error:', error);
       toast.error(error.message || 'Failed to join game');
@@ -396,10 +432,24 @@ export const useGame = () => {
       });
 
       // Listen for game joins
-      contract.on('GameJoined', (gameId, player2) => {
+      contract.on('GameJoined', async (gameId, player2) => {
         toast.info(`Game ${gameId.toString()} joined by ${player2.slice(0, 6)}...`);
         fetchAvailableGames();
         fetchPlayerGames();
+        
+        // If the current user is the game creator, navigate them to the game board
+        if (web3State.selectedAccount && navigate) {
+          try {
+            const game = await contract.getGame(gameId);
+            if (game.player1.toLowerCase() === web3State.selectedAccount.toLowerCase()) {
+              // This is the game creator, navigate them to the game board
+              navigate(`/game/${gameId.toString()}`);
+              toast.success('Your game has started! Navigate to game board.');
+            }
+          } catch (error) {
+            console.error('Error checking game creator:', error);
+          }
+        }
       });
 
       // Listen for moves
