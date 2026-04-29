@@ -77,39 +77,39 @@ const AccountWidget = () => {
           <span className="font-label text-xs text-surface-a50">{networkName}</span>
           <ChevronDown className="w-4 h-4 text-surface-a40 ml-auto" />
         </div>
-        <div className="font-heading text-sm font-semibold text-primary-a40">
+        <div className="font-heading text-sm font-semibold accent-text">
           {balanceFmt} ETH
         </div>
-        <div className="font-label text-xs text-surface-a50 mt-1">{truncated}</div>
+        <div className="font-label text-xs text-gray-500 mt-1">{truncated}</div>
       </button>
 
       {open && (
         <div
           ref={popoverRef}
-          className="absolute bottom-full mb-2 left-0 right-0 bg-surface-tonal-a10 border border-surface-tonal-a30 rounded-xl shadow-2xl overflow-hidden z-50"
+          className="absolute bottom-full mb-2 left-0 right-0 skeleton-card shadow-2xl overflow-hidden z-50"
         >
           {/* Network section */}
           <div className="p-4 border-b border-surface-tonal-a20">
-            <p className="font-label text-xs text-surface-a40 uppercase tracking-wider mb-2">
+            <p className="font-label text-xs text-gray-500 uppercase tracking-wider mb-2">
               Network
             </p>
             <div className="flex items-center gap-2">
               {onCorrectNetwork ? (
                 <>
-                  <CheckCircle2 className="w-4 h-4 text-success-a0" />
-                  <span className="font-body text-sm text-primary-a40">{networkName}</span>
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <span className="font-body text-sm accent-text">{networkName}</span>
                 </>
               ) : (
                 <>
-                  <AlertCircle className="w-4 h-4 text-danger-a0" />
-                  <span className="font-body text-sm text-danger-a10">Wrong network</span>
+                  <AlertCircle className="w-4 h-4 text-danger" />
+                  <span className="font-body text-sm text-danger">Wrong network</span>
                 </>
               )}
             </div>
             {!onCorrectNetwork && (
               <button
                 onClick={switchToSepolia}
-                className="mt-3 w-full text-xs font-label font-semibold text-white bg-primary-a0 hover:bg-primary-a10 rounded-lg px-3 py-2 transition-colors"
+                className="mt-3 w-full text-xs font-label font-semibold skeleton-button rounded-lg px-3 py-2"
               >
                 Switch to Sepolia
               </button>
@@ -118,11 +118,11 @@ const AccountWidget = () => {
 
           {/* Account section */}
           <div className="p-4 border-b border-surface-tonal-a20">
-            <p className="font-label text-xs text-surface-a40 uppercase tracking-wider mb-2">
+            <p className="font-label text-xs text-gray-500 uppercase tracking-wider mb-2">
               Account
             </p>
             <div className="flex items-center gap-2 mb-3">
-              <span className="font-label text-xs text-primary-a40 break-all flex-1">
+              <span className="font-label text-xs accent-text break-all flex-1">
                 {selectedAccount}
               </span>
               <button
@@ -137,14 +137,14 @@ const AccountWidget = () => {
                 )}
               </button>
             </div>
-            <div className="font-body text-sm text-surface-a50">
-              Balance: <span className="text-primary-a40 font-semibold">{balanceFmt} ETH</span>
-            </div>
+            <span className="font-body text-sm text-gray-400">
+              Balance: <span className="accent-text font-semibold">{balanceFmt} ETH</span>
+            </span>
             <a
               href={`https://sepolia.etherscan.io/address/${selectedAccount}`}
               target="_blank"
               rel="noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-xs font-label text-primary-a30 hover:text-primary-a50"
+              className="mt-2 inline-flex items-center gap-1 px-3 py-1 text-xs font-label skeleton-button rounded"
             >
               View on Etherscan <ExternalLink className="w-3 h-3" />
             </a>

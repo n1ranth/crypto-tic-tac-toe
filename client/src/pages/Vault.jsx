@@ -109,10 +109,10 @@ const Vault = () => {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-heading font-bold text-3xl text-primary-a40 mb-2">
+          <h1 className="font-heading font-bold text-4xl accent-text mb-2">
             My Games
           </h1>
-          <p className="font-body text-surface-a50">
+          <p className="font-body text-gray-400 text-lg">
             {games.length === 0
               ? 'You haven\'t played any games yet.'
               : `${games.length} game${games.length === 1 ? '' : 's'} played on-chain`}
@@ -122,30 +122,30 @@ const Vault = () => {
         {/* Stats Cards */}
         {games.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-surface-tonal-a10 border border-surface-tonal-a20 rounded-xl p-4">
+            <div className="skeleton-card">
               <div className="flex items-center gap-3">
-                <TrendingUp className="w-5 h-5 text-primary-a30" />
+                <TrendingUp className="w-5 h-5 text-accent" />
                 <div>
-                  <p className="text-xs text-surface-a50">Total Wagered</p>
-                  <p className="text-lg font-semibold text-primary-a40">{totalWagered.toFixed(4)} ETH</p>
+                  <p className="text-xs text-gray-500">Total Wagered</p>
+                  <p className="text-lg font-semibold accent-text">{totalWagered.toFixed(4)} ETH</p>
                 </div>
               </div>
             </div>
-            <div className="bg-surface-tonal-a10 border border-surface-tonal-a20 rounded-xl p-4">
+            <div className="skeleton-card">
               <div className="flex items-center gap-3">
-                <Trophy className="w-5 h-5 text-warning-a0" />
+                <Trophy className="w-5 h-5 text-warning" />
                 <div>
-                  <p className="text-xs text-surface-a50">Total Won</p>
-                  <p className="text-lg font-semibold text-warning-a0">{totalWon.toFixed(4)} ETH</p>
+                  <p className="text-xs text-gray-500">Total Won</p>
+                  <p className="text-lg font-semibold text-warning">{totalWon.toFixed(4)} ETH</p>
                 </div>
               </div>
             </div>
-            <div className="bg-surface-tonal-a10 border border-surface-tonal-a20 rounded-xl p-4">
+            <div className="skeleton-card">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-success-a10" />
+                <CheckCircle2 className="w-5 h-5 text-success" />
                 <div>
-                  <p className="text-xs text-surface-a50">Win Rate</p>
-                  <p className="text-lg font-semibold text-success-a10">{winRate.toFixed(1)}%</p>
+                  <p className="text-xs text-gray-500">Win Rate</p>
+                  <p className="text-lg font-semibold text-success">{winRate.toFixed(1)}%</p>
                 </div>
               </div>
             </div>
@@ -199,7 +199,7 @@ const Vault = () => {
             {pageGames.map((game) => (
               <div
                 key={game.id}
-                className="bg-surface-tonal-a10 border border-surface-tonal-a20 hover:border-primary-a0/40 rounded-2xl p-5 transition-colors"
+                className="skeleton-card hover:transform hover:scale-102 transition-all"
               >
                 <div className="flex flex-col md:flex-row gap-5">
                   {/* Game Icon */}
@@ -213,11 +213,15 @@ const Vault = () => {
                   <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
                       <div className="flex items-center gap-2 mb-3">
-                        <Trophy className="w-4 h-4 text-primary-a30" />
-                        <h3 className="font-heading font-semibold text-base text-primary-a40">
+                        <Trophy className="w-4 h-4 text-accent" />
+                        <h3 className="font-heading font-semibold text-base accent-text">
                           Game #{game.id}
                         </h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-label ${getStatusColor(game.status)}`}>
+                        <span className={`status-badge ${
+                          game.status === 'Active' ? 'status-active' :
+                          game.status.includes('Won') ? 'status-completed' :
+                          'status-waiting'
+                        }`}>
                           {game.status}
                         </span>
                         {isWinner(game) && (
@@ -229,26 +233,26 @@ const Vault = () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                         <div className="flex items-center gap-2">
-                          <Users className="w-3 h-3 text-surface-a40" />
-                          <span className="text-xs text-surface-a50">Players:</span>
-                          <span className="text-xs font-mono text-primary-a30">
+                          <Users className="w-3 h-3 text-gray-400" />
+                          <span className="text-xs text-gray-500">Players:</span>
+                          <span className="text-xs font-mono accent-text">
                             {formatAddress(game.player1)} vs {game.player2 && game.player2 !== ethers.ZeroAddress ? formatAddress(game.player2) : 'Waiting...'}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Trophy className="w-3 h-3 text-warning-a0" />
-                          <span className="text-xs text-surface-a50">Wager:</span>
-                          <span className="text-xs font-semibold text-warning-a0">{game.wager} ETH</span>
+                          <Trophy className="w-3 h-3 text-warning" />
+                          <span className="text-xs text-gray-500">Wager:</span>
+                          <span className="text-xs font-semibold text-warning">{game.wager} ETH</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Clock className="w-3 h-3 text-surface-a40" />
-                          <span className="text-xs text-surface-a50">Last move:</span>
-                          <span className="text-xs text-primary-a30">{getTimeAgo(game.lastMoveTime)}</span>
+                          <Clock className="w-3 h-3 text-gray-400" />
+                          <span className="text-xs text-gray-500">Last move:</span>
+                          <span className="text-xs accent-text">{getTimeAgo(game.lastMoveTime)}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <ExternalLink className="w-3 h-3 text-surface-a40" />
-                          <span className="text-xs text-surface-a50">Created:</span>
-                          <span className="text-xs text-primary-a30">{formatTime(game.lastMoveTime)}</span>
+                          <ExternalLink className="w-3 h-3 text-gray-400" />
+                          <span className="text-xs text-gray-500">Created:</span>
+                          <span className="text-xs accent-text">{formatTime(game.lastMoveTime)}</span>
                         </div>
                       </div>
                     </div>
@@ -257,14 +261,14 @@ const Vault = () => {
                       {game.status === 'Active' && (
                         <Link
                           to={`/game/${game.id}`}
-                          className="px-3 py-2 bg-primary-a0 hover:bg-primary-a10 text-white rounded-lg font-label text-xs font-semibold transition-colors"
+                          className="px-3 py-2 skeleton-button text-success font-label text-xs font-semibold"
                         >
                           Continue Playing
                         </Link>
                       )}
                       <Link
                         to={`/game/${game.id}`}
-                        className="px-3 py-2 bg-surface-tonal-a20 hover:bg-surface-tonal-a30 text-primary-a40 rounded-lg font-label text-xs transition-colors"
+                        className="px-3 py-2 skeleton-button text-warning font-label text-xs"
                       >
                         View Details
                       </Link>
@@ -272,7 +276,7 @@ const Vault = () => {
                         href={`https://sepolia.etherscan.io/address/${game.player1}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-1 px-3 py-2 bg-surface-tonal-a20 hover:bg-surface-tonal-a30 text-primary-a40 rounded-lg font-label text-xs transition-colors"
+                        className="flex items-center gap-1 px-3 py-2 skeleton-button text-info font-label text-xs"
                       >
                         <ExternalLink className="w-3 h-3" />
                         Etherscan

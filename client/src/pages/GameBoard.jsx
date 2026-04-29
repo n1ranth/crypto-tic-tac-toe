@@ -25,9 +25,7 @@ const GameBoard = () => {
   
   const [myTurn, setMyTurn] = useState(false);
   const [timeUntilTimeout, setTimeUntilTimeout] = useState(null);
-  const [gasDeposit, setGasDeposit] = useState('0');
   const [movesCount, setMovesCount] = useState(0);
-  const [gasCostInfo, setGasCostInfo] = useState({ moveCost: '0', totalGameCost: '0' });
 
   useEffect(() => {
     if (gameId) {
@@ -43,23 +41,38 @@ const GameBoard = () => {
     }
   }, [currentGame, selectedAccount]);
 
+  // Initial moves fetch and auto-refresh every 2 seconds
   useEffect(() => {
-    if (selectedAccount && gameId) {
-      // Fetch pre-paid gas data
-      const fetchGasData = async () => {
-        const deposit = await getGameGasDeposit(gameId, selectedAccount);
-        const moves = await getGameMovesCount(gameId);
-        const costInfo = await getGasCostInfo();
-        setGasDeposit(deposit);
-        setMovesCount(moves);
-        setGasCostInfo(costInfo);
+    if (gameId) {
+      // Initial fetch
+      const fetchInitialMovesData = async () => {
+        try {
+          const moves = await getGameMovesCount(gameId);
+          setMovesCount(moves);
+        } catch (error) {
+          console.error('Error fetching initial moves data:', error);
+        }
       };
       
-      fetchGasData();
-      const interval = setInterval(fetchGasData, 5000); // Check every 5 seconds
-      return () => clearInterval(interval);
+      fetchInitialMovesData();
+      
+      // Auto-refresh game data and moves count every 2 seconds
+      const refreshInterval = setInterval(async () => {
+        // Refresh game details
+        fetchGameDetails(gameId);
+        
+        // Refresh moves count
+        try {
+          const moves = await getGameMovesCount(gameId);
+          setMovesCount(moves);
+        } catch (error) {
+          console.error('Error fetching moves data:', error);
+        }
+      }, 2000); // Refresh every 2 seconds
+      
+      return () => clearInterval(refreshInterval);
     }
-  }, [selectedAccount, gameId, getGameGasDeposit, getGameMovesCount, getGasCostInfo]);
+  }, [gameId, fetchGameDetails, getGameMovesCount]);
 
   const checkTurnStatus = async () => {
     if (!currentGame || !selectedAccount) return;
@@ -155,17 +168,16 @@ const GameBoard = () => {
 
   const getCellStyle = (index) => {
     const value = currentGame.board[index];
-    let baseStyle = "w-24 h-24 border-2 border-surface-tonal-a30 rounded-lg flex items-center justify-center text-2xl font-bold transition-all cursor-pointer ";
+    let baseStyle = "w-24 h-24 game-cell flex items-center justify-center text-2xl font-bold transition-all ";
     
-    // Handle both string and number representations
     const numValue = Number(value);
     
     if (numValue === 0) {
-      baseStyle += myTurn ? "hover:border-primary-a20 hover:bg-surface-tonal-a0 " : "hover:border-surface-tonal-a40 ";
+      baseStyle += myTurn ? "cursor-pointer " : "cursor-not-allowed ";
     } else if (numValue === 1) {
-      baseStyle += "text-primary-a30 bg-primary-a0/10 ";
+      baseStyle += "player-x cursor-not-allowed ";
     } else if (numValue === 2) {
-      baseStyle += "text-success-a10 bg-success-a0/10 ";
+      baseStyle += "player-o cursor-not-allowed ";
     }
     
     return baseStyle;
@@ -190,7 +202,7 @@ const GameBoard = () => {
 
   return (
     <div className="flex-1 px-6 md:px-10 py-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <button
@@ -203,7 +215,7 @@ const GameBoard = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-heading font-bold text-3xl text-primary-a40 mb-2">
+              <h1 className="font-heading font-bold text-2xl accent-text">
                 Game #{gameId}
               </h1>
               <div className="flex items-center gap-4 text-sm text-surface-a50">
@@ -215,30 +227,16 @@ const GameBoard = () => {
               </div>
             </div>
             
-            {/* Pre-paid Gas Widget */}
-            <div className="bg-surface-tonal-a10 rounded-lg p-3 border border-surface-tonal-a30">
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <div className="text-xs text-surface-a50">Gas Deposit</div>
-                  <div className="font-mono text-sm text-primary-a30">{parseFloat(gasDeposit).toFixed(6)} ETH</div>
-                  <div className="text-xs text-surface-a50 mt-1">Moves: {movesCount}/9</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs text-surface-a50">Cost per Move</div>
-                  <div className="font-mono text-sm text-success-a10">{parseFloat(gasCostInfo.moveCost).toFixed(6)} ETH</div>
-                </div>
-              </div>
-              {parseFloat(gasDeposit) < parseFloat(gasCostInfo.moveCost) && (
-                <div className="text-xs text-warning-a10 mt-2">
-                  ⚠️ Insufficient gas for next move!
-                </div>
-              )}
+            {/* Moves Counter */}
+            <div className="text-right">
+              <div className="text-xs text-gray-500">Moves</div>
+              <div className="text-lg font-bold accent-text">{movesCount}/9</div>
             </div>
             
-            <div className={`px-4 py-2 rounded-lg font-label font-semibold ${
+            <div className={`status-badge ${
               isGameOver ? (
-                isWinner ? 'bg-success-a0/20 text-success-a10' : 'bg-danger-a0/20 text-danger-a10'
-              ) : myTurn ? 'bg-primary-a0/20 text-primary-a30' : 'bg-surface-a40/20 text-surface-a40'
+                isWinner ? 'status-active' : 'status-completed'
+              ) : myTurn ? 'status-active' : 'status-waiting'
             }`}>
               {isGameOver ? (
                 isWinner ? 'You Won! 🎉' : currentGame.status === 'Draw' ? 'Draw' : 'You Lost'
@@ -250,8 +248,8 @@ const GameBoard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Game Board */}
           <div className="lg:col-span-2">
-            <div className="bg-surface-tonal-a10 border border-surface-tonal-a20 rounded-2xl p-8">
-              <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto mb-6">
+            <div className="game-board">
+              <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto mb-8">
                 {currentGame.board.map((cell, index) => (
                   <button
                     key={index}
@@ -280,7 +278,7 @@ const GameBoard = () => {
                   </div>
                   <button
                     onClick={() => navigate('/lobby')}
-                    className="px-6 py-3 bg-primary-a0 hover:bg-primary-a10 text-white rounded-xl font-label font-semibold transition-colors"
+                    className="skeleton-button px-8 py-3"
                   >
                     Back to Lobby
                   </button>
@@ -293,7 +291,7 @@ const GameBoard = () => {
                   <button
                     onClick={handleClaimTimeout}
                     disabled={loading}
-                    className="px-6 py-3 bg-warning-a0 hover:bg-warning-a10 text-white rounded-xl font-label font-semibold transition-colors"
+                    className="skeleton-button px-8 py-3 disabled:opacity-50"
                   >
                     {loading ? 'Claiming...' : 'Claim Timeout (Opponent AFK)'}
                   </button>
@@ -304,29 +302,29 @@ const GameBoard = () => {
 
           {/* Game Info */}
           <div className="lg:col-span-1">
-            <div className="bg-surface-tonal-a10 border border-surface-tonal-a20 rounded-2xl p-6">
-              <h2 className="font-heading font-semibold text-lg text-primary-a40 mb-4">
+            <div className="minimal-card">
+              <h2 className="font-heading font-bold text-lg accent-text mb-4">
                 Game Info
               </h2>
               
               <div className="space-y-4">
-                <div>
-                  <p className="text-xs text-surface-a50 mb-1">Player 1 (X)</p>
-                  <p className="font-mono text-sm text-primary-a30">
+                <div className="minimal-card mb-3">
+                  <p className="text-xs text-gray-500 mb-1">Player 1 (X)</p>
+                  <p className="font-mono text-sm accent-text font-semibold">
                     {formatAddress(currentGame.player1)}
                     {currentGame.player1.toLowerCase() === selectedAccount?.toLowerCase() && (
-                      <span className="ml-2 text-xs bg-primary-a0/20 text-primary-a30 px-2 py-1 rounded">You</span>
+                      <span className="ml-2 text-xs bg-primary text-white px-2 py-1 rounded text-xs">You</span>
                     )}
                   </p>
                 </div>
                 
                 {currentGame.player2 && currentGame.player2 !== ethers.ZeroAddress && (
-                  <div>
-                    <p className="text-xs text-surface-a50 mb-1">Player 2 (O)</p>
-                    <p className="font-mono text-sm text-success-a10">
+                  <div className="minimal-card">
+                    <p className="text-xs text-gray-500 mb-1">Player 2 (O)</p>
+                    <p className="font-mono text-sm text-success font-semibold">
                       {formatAddress(currentGame.player2)}
                       {currentGame.player2.toLowerCase() === selectedAccount?.toLowerCase() && (
-                        <span className="ml-2 text-xs bg-success-a0/20 text-success-a10 px-2 py-1 rounded">You</span>
+                        <span className="ml-2 text-xs bg-success text-white px-2 py-1 rounded text-xs">You</span>
                       )}
                     </p>
                   </div>
