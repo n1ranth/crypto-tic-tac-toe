@@ -56,7 +56,7 @@ const GameBoard = () => {
       
       fetchInitialMovesData();
       
-      // Auto-refresh game data and moves count every 2 seconds
+      // Auto-refresh game data and moves count every 1 second
       const refreshInterval = setInterval(async () => {
         // Refresh game details
         fetchGameDetails(gameId);
@@ -68,7 +68,7 @@ const GameBoard = () => {
         } catch (error) {
           console.error('Error fetching moves data:', error);
         }
-      }, 2000); // Refresh every 2 seconds
+      }, 1000); // Refresh every 1 second
       
       return () => clearInterval(refreshInterval);
     }
