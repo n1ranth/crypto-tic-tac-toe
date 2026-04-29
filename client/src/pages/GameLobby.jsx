@@ -80,11 +80,11 @@ const GameLobby = () => {
     <div className="flex-1 px-6 md:px-10 py-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-              <h1 className="font-heading font-bold text-4xl accent-text mb-2">
+        <div className="mb-10 text-center animate-slide-down">
+              <h1 className="font-heading font-bold text-5xl md:text-6xl accent-text mb-4 animate-glow">
                 Tic-Tac-Toe Arena
               </h1>
-              <p className="font-body text-gray-400 text-lg">
+              <p className="font-body text-gray-400 text-xl max-w-3xl mx-auto animate-fade-in">
                 Stake Sepolia ETH and battle opponents in on-chain Tic-Tac-Toe. Winner takes all!
               </p>
         </div>
@@ -93,10 +93,10 @@ const GameLobby = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Create Game */}
           <div className="lg:col-span-1">
-            <div className="skeleton-card">
-              <div className="flex items-center gap-2 mb-4">
-                <Plus className="w-5 h-5 text-accent" />
-                <h2 className="font-heading font-bold text-xl accent-text">
+            <div className="skeleton-card transform transition-all duration-300 hover:scale-105 animate-fade-in">
+              <div className="flex items-center gap-2 mb-6">
+                <Plus className="w-6 h-6 text-accent animate-pulse" />
+                <h2 className="font-heading font-bold text-2xl accent-text animate-slide-in-left">
                   Create New Game
                 </h2>
               </div>
@@ -104,15 +104,15 @@ const GameLobby = () => {
               {!showCreateForm ? (
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="skeleton-button w-full flex items-center justify-center gap-2"
+                  className="skeleton-button w-full flex items-center justify-center gap-2 py-3 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-zoom-in"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-5 h-5 animate-pulse" />
                   Create Game
                 </button>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-5 animate-slide-in-up">
                   <div>
-                    <label className="block text-sm font-bold text-primary-a0 mb-2 font-label">
+                    <label className="block text-base font-bold text-primary-a0 mb-3 font-label animate-fade-in">
                       Wager Amount (ETH)
                     </label>
                     <input
@@ -122,14 +122,14 @@ const GameLobby = () => {
                       value={wagerAmount}
                       onChange={(e) => setWagerAmount(e.target.value)}
                       placeholder="0.01"
-                      className="w-full px-4 py-2 bg-surface-tonal-a0 border border-surface-tonal-a20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-a20 text-primary-a40"
+                      className="w-full px-4 py-3 bg-surface-tonal-a0 border-2 border-surface-tonal-a20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-a30 focus:border-primary-a30 text-primary-a40 text-base transition-all duration-300 transform hover:scale-105"
                     />
                   </div>
                   <div className="flex gap-3">
                     <button
                       onClick={handleCreateGame}
                       disabled={loading || !wagerAmount}
-                      className="flex-1 skeleton-button disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 skeleton-button py-3 disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-zoom-in"
                     >
                       {loading ? 'Creating...' : 'Create'}
                     </button>
@@ -138,7 +138,7 @@ const GameLobby = () => {
                         setShowCreateForm(false);
                         setWagerAmount('');
                       }}
-                      className="skeleton-button"
+                      className="skeleton-button py-3 transform transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-slide-in-right"
                     >
                       Cancel
                     </button>
@@ -148,10 +148,10 @@ const GameLobby = () => {
             </div>
 
             {/* My Games */}
-            <div className="skeleton-card mt-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Trophy className="w-5 h-5 text-accent" />
-                <h2 className="font-heading font-bold text-xl accent-text">
+            <div className="skeleton-card mt-8 transform transition-all duration-300 hover:scale-105 animate-fade-in">
+              <div className="flex items-center gap-2 mb-6">
+                <Users className="w-6 h-6 text-accent animate-pulse" />
+                <h2 className="font-heading font-bold text-2xl accent-text animate-slide-in-left">
                   Your Games
                 </h2>
               </div>
@@ -162,10 +162,11 @@ const GameLobby = () => {
                 </p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {games.map((game) => (
+                  {games.map((game, index) => (
                     <div
                       key={game.id}
-                      className="skeleton-card"
+                      className="skeleton-card transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:-translate-y-1 animate-fade-in"
+                      style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-label text-sm font-semibold accent-text">
@@ -211,10 +212,10 @@ const GameLobby = () => {
 
           {/* Right: Available Games */}
           <div className="lg:col-span-2">
-            <div className="skeleton-card">
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-5 h-5 text-accent" />
-                <h2 className="font-heading font-bold text-xl accent-text">
+            <div className="skeleton-card transform transition-all duration-300 hover:scale-105 animate-fade-in">
+              <div className="flex items-center gap-2 mb-6">
+                <Users className="w-6 h-6 text-accent animate-pulse" />
+                <h2 className="font-heading font-bold text-2xl accent-text animate-slide-in-right">
                   Available Games
                 </h2>
               </div>
@@ -229,10 +230,11 @@ const GameLobby = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {availableGames.filter(game => !isGameExpired(game.lastMoveTime)).map((game) => (
+                  {availableGames.filter(game => !isGameExpired(game.lastMoveTime)).map((game, index) => (
                     <div
                       key={game.id}
-                      className="skeleton-card"
+                      className="skeleton-card transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:-translate-y-1 animate-fade-in"
+                      style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-label text-sm font-semibold accent-text">
