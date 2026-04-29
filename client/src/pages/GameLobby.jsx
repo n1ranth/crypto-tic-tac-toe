@@ -16,7 +16,6 @@ const GameLobby = () => {
     loading, 
     createGame, 
     joinGame, 
-    deleteGame,
     fetchAvailableGames, 
     fetchPlayerGames,
     getGasCostInfo
@@ -61,11 +60,7 @@ const GameLobby = () => {
     }
   };
 
-  const handleDeleteGame = async (gameId) => {
-    const success = await deleteGame(gameId);
-    // Game lists will be automatically refreshed in the deleteGame function
-  };
-
+  
   
   const formatAddress = (address) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -197,27 +192,16 @@ const GameLobby = () => {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2">
-                        {game.player1.toLowerCase() === selectedAccount?.toLowerCase() && game.status === 'Empty' && (
-                          <button
-                            onClick={() => handleDeleteGame(game.id)}
-                            disabled={loading}
-                            className="skeleton-button text-danger font-label text-xs w-full"
-                          >
-                            Delete
-                          </button>
-                        )}
-                        <button
-                          onClick={() => navigate(`/game/${game.id}`)}
-                          className={`skeleton-button w-full px-4 py-2 font-semibold text-sm ${
-                            game.status === 'Active' 
-                              ? 'text-success' 
-                              : 'text-warning'
-                          }`}
-                        >
-                          {game.status === 'Active' ? 'Continue Game' : 'View Details'}
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => navigate(`/game/${game.id}`)}
+                        className={`skeleton-button w-full px-4 py-2 font-semibold text-sm ${
+                          game.status === 'Active' 
+                            ? 'text-success' 
+                            : 'text-warning'
+                        }`}
+                      >
+                        {game.status === 'Active' ? 'Continue Game' : 'View Details'}
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -275,34 +259,13 @@ const GameLobby = () => {
                         </div>
                       </div>
 
-                      <div className="flex gap-2">
-                        {game.player1.toLowerCase() === selectedAccount?.toLowerCase() ? (
-                          <>
-                            <button
-                              onClick={() => handleDeleteGame(game.id)}
-                              disabled={loading}
-                              className="skeleton-button text-danger font-label text-xs flex-1"
-                            >
-                              Delete
-                            </button>
-                            <button
-                              onClick={() => navigate(`/game/${game.id}`)}
-                              disabled={loading}
-                              className="skeleton-button text-info font-label text-xs flex-1"
-                            >
-                              View
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => handleJoinGame(game.id)}
-                            disabled={loading || isMyGame(game.player1, game.player2)}
-                            className="skeleton-button w-full disabled:opacity-50"
-                          >
-                            {isMyGame(game.player1, game.player2) ? 'Your Game' : 'Join Game'}
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        onClick={() => handleJoinGame(game.id)}
+                        disabled={loading || isMyGame(game.player1, game.player2)}
+                        className="skeleton-button w-full disabled:opacity-50"
+                      >
+                        {isMyGame(game.player1, game.player2) ? 'Your Game' : 'Join Game'}
+                      </button>
                     </div>
                   ))}
                 </div>
