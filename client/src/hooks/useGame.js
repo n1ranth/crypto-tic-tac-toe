@@ -530,6 +530,36 @@ export const useGame = (navigate = null) => {
     }
   }, [web3State.contractInstance, fetchAvailableGames, fetchPlayerGames]);
 
+  // Delete a game (only for game creator)
+  const deleteGame = useCallback(async (gameId) => {
+    if (!web3State.contractInstance || !web3State.selectedAccount) {
+      toast.error('Please connect your wallet first');
+      return false;
+    }
+
+    setLoading(true);
+    try {
+      const tx = await web3State.contractInstance.deleteGame(gameId);
+      
+      toast.info('Deleting game...');
+      const receipt = await tx.wait();
+      
+      toast.success('Game deleted successfully! Funds refunded.');
+      
+      // Refresh games lists
+      await fetchAvailableGames();
+      await fetchPlayerGames();
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting game:', error);
+      toast.error(error.message || 'Failed to delete game');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [web3State.contractInstance, web3State.selectedAccount, fetchAvailableGames, fetchPlayerGames]);
+
   return {
     games,
     currentGame,
@@ -540,6 +570,7 @@ export const useGame = (navigate = null) => {
     makeMove,
     submitBatchMoves,
     claimTimeout,
+    deleteGame,
     getGameGasDeposit,
     getGameMovesCount,
     getGasCostInfo,

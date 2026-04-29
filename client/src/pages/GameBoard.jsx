@@ -102,7 +102,7 @@ const GameBoard = () => {
 
   const handleCellClick = async (index) => {
     // Debug logging
-    console.log('Cell click:', { index, myTurn, loading, board: currentGame?.board, gasDeposit, movesCount });
+    console.log('Cell click:', { index, myTurn, loading, board: currentGame?.board, movesCount });
     
     if (!currentGame || !currentGame.board) {
       toast.error('Game not loaded properly');
@@ -124,13 +124,7 @@ const GameBoard = () => {
       return;
     }
 
-    // Check if player has enough gas deposit
-    const hasGasDeposit = parseFloat(gasDeposit) >= parseFloat(gasCostInfo.moveCost);
-    if (!hasGasDeposit) {
-      toast.error('Insufficient gas deposit for this move!');
-      return;
-    }
-
+    
     console.log('Using pre-paid gas move');
     await makeMove(gameId, index);
   };

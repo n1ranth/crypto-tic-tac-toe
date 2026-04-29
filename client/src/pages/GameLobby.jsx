@@ -16,6 +16,7 @@ const GameLobby = () => {
     loading, 
     createGame, 
     joinGame, 
+    deleteGame,
     fetchAvailableGames, 
     fetchPlayerGames,
     getGasCostInfo
@@ -60,6 +61,12 @@ const GameLobby = () => {
     }
   };
 
+  const handleDeleteGame = async (gameId) => {
+    const success = await deleteGame(gameId);
+    // Game lists will be automatically refreshed in the deleteGame function
+  };
+
+  
   const formatAddress = (address) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
@@ -67,6 +74,11 @@ const GameLobby = () => {
   const isMyGame = (player1, player2) => {
     return selectedAccount && (player1.toLowerCase() === selectedAccount.toLowerCase() || 
            player2.toLowerCase() === selectedAccount.toLowerCase());
+  };
+
+  const isGameExpired = (lastMoveTime) => {
+    const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutes in milliseconds
+    return (Date.now() - (lastMoveTime * 1000)) > FIVE_MINUTES;
   };
 
   return (
@@ -122,7 +134,7 @@ const GameLobby = () => {
                     <button
                       onClick={handleCreateGame}
                       disabled={loading || !wagerAmount}
-                      className="flex-1 px-4 py-2 bg-primary-a0 hover:bg-primary-a10 disabled:bg-surface-tonal-a20 disabled:text-surface-a40 disabled:cursor-not-allowed text-white rounded-lg font-label font-semibold transition-colors"
+                      className="flex-1 skeleton-button disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? 'Creating...' : 'Create'}
                     </button>
@@ -131,7 +143,7 @@ const GameLobby = () => {
                         setShowCreateForm(false);
                         setWagerAmount('');
                       }}
-                      className="px-4 py-2 bg-surface-tonal-a20 hover:bg-surface-tonal-a30 text-surface-a40 rounded-lg font-label font-semibold transition-colors"
+                      className="skeleton-button"
                     >
                       Cancel
                     </button>
@@ -141,7 +153,7 @@ const GameLobby = () => {
             </div>
 
             {/* My Games */}
-            <div className="skeleton-card">
+            <div className="skeleton-card mt-6">
               <div className="flex items-center gap-2 mb-4">
                 <Trophy className="w-5 h-5 text-accent" />
                 <h2 className="font-heading font-bold text-xl accent-text">
@@ -185,16 +197,27 @@ const GameLobby = () => {
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => navigate(`/game/${game.id}`)}
-                        className={`skeleton-button w-full px-4 py-2 font-semibold text-sm ${
-                          game.status === 'Active' 
-                            ? 'text-success' 
-                            : 'text-warning'
-                        }`}
-                      >
-                        {game.status === 'Active' ? 'Continue Game' : 'View Details'}
-                      </button>
+                      <div className="flex flex-col gap-2">
+                        {game.player1.toLowerCase() === selectedAccount?.toLowerCase() && game.status === 'Empty' && (
+                          <button
+                            onClick={() => handleDeleteGame(game.id)}
+                            disabled={loading}
+                            className="skeleton-button text-danger font-label text-xs w-full"
+                          >
+                            Delete
+                          </button>
+                        )}
+                        <button
+                          onClick={() => navigate(`/game/${game.id}`)}
+                          className={`skeleton-button w-full px-4 py-2 font-semibold text-sm ${
+                            game.status === 'Active' 
+                              ? 'text-success' 
+                              : 'text-warning'
+                          }`}
+                        >
+                          {game.status === 'Active' ? 'Continue Game' : 'View Details'}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -222,7 +245,7 @@ const GameLobby = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {availableGames.map((game) => (
+                  {availableGames.filter(game => !isGameExpired(game.lastMoveTime)).map((game) => (
                     <div
                       key={game.id}
                       className="skeleton-card"
@@ -252,13 +275,34 @@ const GameLobby = () => {
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => handleJoinGame(game.id)}
-                        disabled={loading || isMyGame(game.player1, game.player2)}
-                        className="minimal-button w-full disabled:opacity-50"
-                      >
-                        {isMyGame(game.player1, game.player2) ? 'Your Game' : 'Join Game'}
-                      </button>
+                      <div className="flex gap-2">
+                        {game.player1.toLowerCase() === selectedAccount?.toLowerCase() ? (
+                          <>
+                            <button
+                              onClick={() => handleDeleteGame(game.id)}
+                              disabled={loading}
+                              className="skeleton-button text-danger font-label text-xs flex-1"
+                            >
+                              Delete
+                            </button>
+                            <button
+                              onClick={() => navigate(`/game/${game.id}`)}
+                              disabled={loading}
+                              className="skeleton-button text-info font-label text-xs flex-1"
+                            >
+                              View
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => handleJoinGame(game.id)}
+                            disabled={loading || isMyGame(game.player1, game.player2)}
+                            className="skeleton-button w-full disabled:opacity-50"
+                          >
+                            {isMyGame(game.player1, game.player2) ? 'Your Game' : 'Join Game'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

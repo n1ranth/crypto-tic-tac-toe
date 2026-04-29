@@ -336,7 +336,45 @@ contract TicTacToe {
         return gameMovesCount[_gameId];
     }
     
-    function getGasCostInfo() external view returns (uint256 moveCost, uint256 totalGameCost) {
+    function getGasCostInfo() external pure returns (uint256 moveCost, uint256 totalGameCost) {
         return (MOVE_GAS_COST, TOTAL_GAME_GAS);
+    }
+    
+    function deleteGame(uint256 _gameId) external {
+        Game storage game = games[_gameId];
+        require(game.player1 != address(0), "Game does not exist");
+        require(msg.sender == game.player1, "Only game creator can delete game");
+        require(game.status == GameStatus.Empty, "Can only delete games that haven't been joined");
+        
+        // Refund gas deposit to creator
+        uint256 gasDeposit = gameGasDeposits[_gameId][game.player1];
+        if (gasDeposit > 0) {
+            gameGasDeposits[_gameId][game.player1] = 0;
+            (bool success, ) = payable(game.player1).call{value: gasDeposit}("");
+            require(success, "Failed to refund gas deposit");
+            emit GasRefunded(_gameId, game.player1, gasDeposit);
+        }
+        
+        // Refund wager to creator
+        if (game.wager > 0) {
+            (bool success, ) = payable(game.player1).call{value: game.wager}("");
+            require(success, "Failed to refund wager");
+        }
+        
+        // Remove game from player's games list
+        uint256[] storage playerGameList = playerGames[game.player1];
+        for (uint256 i = 0; i < playerGameList.length; i++) {
+            if (playerGameList[i] == _gameId) {
+                playerGameList[i] = playerGameList[playerGameList.length - 1];
+                playerGameList.pop();
+                break;
+            }
+        }
+        
+        // Delete the game
+        delete games[_gameId];
+        // Note: mappings cannot be deleted directly, but individual entries can be deleted
+        // gameGasDeposits[_gameId] and gameMovesCount[_gameId] will remain but won't be accessible
+        // since the game itself is deleted
     }
 }
