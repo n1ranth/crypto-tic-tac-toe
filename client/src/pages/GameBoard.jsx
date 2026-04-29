@@ -221,12 +221,7 @@ const GameBoard = () => {
               </div>
             </div>
             
-            {/* Moves Counter */}
-            <div className="text-right">
-              <div className="text-xs text-gray-500">Moves</div>
-              <div className="text-lg font-bold accent-text">{movesCount}/9</div>
-            </div>
-            
+                        
             <div className={`status-badge ${
               isGameOver ? (
                 isWinner ? 'status-active' : 'status-completed'

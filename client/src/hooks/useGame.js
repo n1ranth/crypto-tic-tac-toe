@@ -204,17 +204,25 @@ export const useGame = (navigate = null) => {
     if (!web3State.contractInstance) return 0;
     
     try {
-      // Check if function exists on contract
-      if (typeof web3State.contractInstance.getGameMovesCount !== 'function') {
-        console.log('getGameMovesCount not available on contract, using fallback value');
-        return 0; // Default to 0 moves
-      }
-      
       const count = await web3State.contractInstance.getGameMovesCount(gameId);
+      console.log('Moves count from contract:', count);
       return Number(count);
     } catch (error) {
       console.error('Get game moves count error:', error);
-      return 0; // Fallback to 0 moves
+      
+      // Fallback: try to get game details and count moves from board
+      try {
+        const game = await web3State.contractInstance.games(gameId);
+        if (game && game.board) {
+          const moves = game.board.filter(cell => Number(cell) !== 0).length;
+          console.log('Moves count from board fallback:', moves, 'Game status:', game.status);
+          return moves;
+        }
+      } catch (fallbackError) {
+        console.error('Board fallback error:', fallbackError);
+      }
+      
+      return 0; // Final fallback
     }
   }, [web3State]);
 
